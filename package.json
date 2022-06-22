@@ -1,0 +1,24 @@
+{
+  "name": "projeto12-batepapo-uol-api",
+  "version": "1.0.0",
+  "description": "live webchat api",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasbatista2408/projeto12-batepapo-uol-api.git"
+  },
+  "author": "lucasbatista",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucasbatista2408/projeto12-batepapo-uol-api/issues"
+  },
+  "homepage": "https://github.com/lucasbatista2408/projeto12-batepapo-uol-api#readme",
+  "dependencies": {
+    "express": "^4.18.1",
+    "mongodb": "^4.7.0"
+  }
+}
