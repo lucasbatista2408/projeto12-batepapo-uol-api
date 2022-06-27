@@ -88,7 +88,7 @@ app.post('/messages', async (req, res) => {
     to: data.to,
     text: data.text,
     type: data.type,
-    time: dayjs().format('HH:mm:ss')
+    time: dayjs().format('HH:mm:ss'),
   }
 
   if(validate.error){
@@ -110,7 +110,7 @@ app.get('/messages', async (req, res) => {
   const limit = req.query.limit;
 
   try{
-    const visible =  await db.collection("messages").find({$or: [{type: "message"}, {to: "Todos"}, {to: req.headers.user}, {from: req.headers.user}, ]}).sort({time: 1}).toArray();
+    const visible =  await db.collection("messages").find({$or: [{type: "message"}, {to: "Todos"}, {to: req.headers.user}, {from: req.headers.user}, ]}).sort({_id: 1}).toArray();
     res.status(200).send(visible.slice(-limit));
   }catch(err){
     console.log(err);
@@ -119,6 +119,30 @@ app.get('/messages', async (req, res) => {
 })
 
 // Status
+
+setInterval( async () => {
+  // CHECK EVERY 15s IF THE USER IS STILL ONLINE, OTHERWISE IT KICKS THE USER OUT OF THE ROOM AND
+  // SENDS A MESSAGE TO THE CHAT ROOM SAYING THE USER LEFT THE ROOM.
+
+  const tobeDeleted = await db.collection('participants').findOne({lastStatus: {$lt: Date.now() - 15000}})
+
+  if(!tobeDeleted){
+    return
+  }
+
+  const offline = tobeDeleted.name;
+  const offlineMessage = {
+    from: offline, 
+    to: "Todos", 
+    text: 'saiu da sala...', 
+    type: "status", 
+    time: dayjs().format('HH:mm:ss')
+  }
+  await db.collection('messages').insertOne(offlineMessage)
+  await db.collection('participants').deleteOne({name: offline})
+}, 10000)
+
+
 app.post('/status', async (req, res) =>{
   const {user} = req.headers;
 
@@ -133,7 +157,7 @@ app.post('/status', async (req, res) =>{
       {$set:
       {lastStatus: Date.now()}})
     
-    const tobeDeleted = await db.collection('participants').findONe({lastStatus: {$lt: Date.now() - 15000}})
+    const tobeDeleted = await db.collection('participants').findOne({lastStatus: {$lt: Date.now() - 15000}})
     const offline = tobeDeleted.name;
     const offlineMessage = {
       from: offline, 
