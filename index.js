@@ -68,16 +68,23 @@ app.post('/participants', async (req, res) =>{
     await db.collection('participants').insertOne(participant)
     await db.collection('messages').insertOne(welcome)
     res.status(201).send("SUCESSFULL");
-
+    client.close()
   } catch(err){
     console.log(err);
     res.status(422).send("Erro ao cadastrar participante");
+    client.close()
   }
 })
 
 app.get('/participants', async (req,res) => {
+  const client = new MongoClient(url);
+  await client.connect();
+  db = client.db('batepapoapi');
+
   participants = await db.collection('participants').find().toArray()
   res.status(201).send(participants)
+
+  client.close()
 })
 
 // MESSAGES
@@ -106,9 +113,15 @@ app.post('/messages', async (req, res) => {
 
     await db.collection('messages').insertOne(message)
     res.sendStatus(201)
+
+    client.close()
+
   } catch(err){
+
     console.log(err);
     res.sendStatus(422);
+
+    client.close()
   }
 })
 
@@ -123,9 +136,13 @@ app.get('/messages', async (req, res) => {
 
     const visible =  await db.collection("messages").find({$or: [{type: "message"}, {to: "Todos"}, {to: req.headers.user}, {from: req.headers.user}, ]}).sort({_id: 1}).toArray();
     res.status(200).send(visible.slice(-limit));
+
+    client.close()
   }catch(err){
     console.log(err);
     res.sendStatus(500);
+
+    client.close()
   }
 })
 
@@ -154,6 +171,8 @@ setInterval( async () => {
   }
   await db.collection('messages').insertOne(offlineMessage)
   await db.collection('participants').deleteOne({name: offline})
+
+  client.close()
 }, 10000)
 
 
@@ -161,7 +180,7 @@ app.post('/status', async (req, res) =>{
   const {user} = req.headers;
 
   try{
-    
+
   const client = new MongoClient(url);
   await client.connect();
   db = client.db('batepapoapi');
@@ -188,9 +207,14 @@ app.post('/status', async (req, res) =>{
     await db.collection('messages').insertOne(offlineMessage)
     await db.collection('participants').deleteOne({name: offline})
     res.status(200).send("UPDATED")
+
+    client.close()
+
   } catch (err){
     console.log(err);
     res.status(500).send("COULD NOT UPDATE")
+
+    client.close()
   }
 })
 
