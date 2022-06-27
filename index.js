@@ -42,6 +42,9 @@ app.post('/participants', async (req, res) =>{
   }
 
   try{
+    const client = new MongoClient(url);
+    await client.connect();
+    db = client.db('batepapoapi');
 
     const exists = await db.collection("participants").find({...name}).toArray();
 
@@ -97,6 +100,10 @@ app.post('/messages', async (req, res) => {
   }
 
   try{
+    const client = new MongoClient(url);
+    await client.connect();
+    db = client.db('batepapoapi');
+
     await db.collection('messages').insertOne(message)
     res.sendStatus(201)
   } catch(err){
@@ -110,6 +117,10 @@ app.get('/messages', async (req, res) => {
   const limit = req.query.limit;
 
   try{
+    const client = new MongoClient(url);
+    await client.connect();
+    db = client.db('batepapoapi');
+
     const visible =  await db.collection("messages").find({$or: [{type: "message"}, {to: "Todos"}, {to: req.headers.user}, {from: req.headers.user}, ]}).sort({_id: 1}).toArray();
     res.status(200).send(visible.slice(-limit));
   }catch(err){
@@ -123,6 +134,9 @@ app.get('/messages', async (req, res) => {
 setInterval( async () => {
   // CHECK EVERY 15s IF THE USER IS STILL ONLINE, OTHERWISE IT KICKS THE USER OUT OF THE ROOM AND
   // SENDS A MESSAGE TO THE CHAT ROOM SAYING THE USER LEFT THE ROOM.
+  const client = new MongoClient(url);
+  await client.connect();
+  db = client.db('batepapoapi');
 
   const tobeDeleted = await db.collection('participants').findOne({lastStatus: {$lt: Date.now() - 15000}})
 
@@ -147,6 +161,11 @@ app.post('/status', async (req, res) =>{
   const {user} = req.headers;
 
   try{
+    
+  const client = new MongoClient(url);
+  await client.connect();
+  db = client.db('batepapoapi');
+
   const status = await db.collection('participants').findOne({name: user})
     if(!status){
       console.log("NOT_FOUND")
